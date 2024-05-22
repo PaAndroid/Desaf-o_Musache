@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+</head>
+<body>
+    <h1>Pregunta al modelo RAG</h1>
+    <form id="qa-form">
+        <label for="question">Pregunta:</label><br>
+        <input type="text" id="question" name="question"><br><br>
+        <label for="context">Contexto:</label><br>
+        <textarea id="context" name="context" rows="4" cols="50"></textarea><br><br>
+        <input type="submit" value="Enviar">
+    </form>
+
+    <h2>Respuesta:</h2>
+    <p id="answer"></p>
+
+    <h2>Historial de Preguntas y Respuestas:</h2>
+    <ul id="qa-list"></ul>
+
+    <script>
+        document.getElementById('qa-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const question = document.getElementById('question').value;
+            const context = document.getElementById('context').value;
+
+            const response = await fetch('http://127.0.0.1:8000/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ question, context })
+            });
+
+            const data = await response.json();
+            document.getElementById('answer').innerText = data.answer;
+
+            // Actualizar el historial de preguntas y respuestas
+            fetchQuestions();
+        });
+
+        async function fetchQuestions() {
+            const response = await fetch('http://127.0.0.1:8000/questions');
+            const data = await response.json();
+            const qaList = document.getElementById('qa-list');
+            qaList.innerHTML = '';
+            data.forEach(item => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `Pregunta: ${item.question}, Respuesta: ${item.answer}`;
+                qaList.appendChild(listItem);
+            });
+        }
+
+        // Cargar historial al iniciar la página
+        fetchQuestions();
+    </script>
+</body>
+</html>
